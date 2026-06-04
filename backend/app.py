@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from .processor import build_excel_base64
-from .database import init_db, save_extracted_data, get_all_extracted_data
+from .database import init_db, save_extracted_data, get_all_extracted_data, save_job_history, get_job_history
 
 app = FastAPI(title="AI Document Batch Processor API", lifespan=None)
 
@@ -37,7 +37,8 @@ async def process_file(
     file: Annotated[UploadFile, File()],
     document_type: Annotated[str, Form()] = "general",
     custom_prompt: Annotated[str, Form()] = "",
-    x_gemini_api_key: Annotated[str | None, Header()] = None
+    x_gemini_api_key: Annotated[str | None, Header()] = None,
+    x_user_id: Annotated[str | None, Header()] = "anonymous"
 ):
     import asyncio
     import json
@@ -83,7 +84,7 @@ async def process_file(
             try:
                 category, extracted, summary_text, suggested_filename = await loop.run_in_executor(None, classify_and_extract, file_uri, document_type, api_key_to_use, custom_prompt)
                 if extracted:
-                    save_extracted_data(file.filename, category, extracted)
+                    save_extracted_data(x_user_id, file.filename, category, extracted)
                 yield json.dumps({"status": "done", "category": category, "extracted": extracted, "text": summary_text, "suggestedFilename": suggested_filename, "fileName": file.filename}) + "\n"
             except Exception as exc:
                 if api_key_to_use:
@@ -91,7 +92,7 @@ async def process_file(
                     try:
                         category, extracted, summary_text, suggested_filename = await loop.run_in_executor(None, classify_and_extract, file_uri, document_type, None, custom_prompt)
                         if extracted:
-                            save_extracted_data(file.filename, category, extracted)
+                            save_extracted_data(x_user_id, file.filename, category, extracted)
                         yield json.dumps({"status": "done", "category": category, "extracted": extracted, "text": summary_text, "suggestedFilename": suggested_filename, "fileName": file.filename}) + "\n"
                     except Exception as exc2:
                         yield json.dumps({"status": "failed", "error": str(exc2), "fileName": file.filename}) + "\n"
@@ -116,5 +117,21 @@ def export_excel(payload: ExcelRequest):
     return {"fileName": "processed_results.xlsx", "contentBase64": build_excel_base64(payload.results)}
 
 @app.get("/history")
-def get_history():
-    return {"history": get_all_extracted_data()}
+def get_history(x_user_id: Annotated[str | None, Header()] = "anonymous"):
+    return {"history": get_all_extracted_data(x_user_id)}
+
+class JobHistoryRequest(BaseModel):
+    job_id: str
+    history_data: list
+
+@app.post("/job-history")
+def save_user_job_history(
+    payload: JobHistoryRequest,
+    x_user_id: Annotated[str | None, Header()] = "anonymous"
+):
+    save_job_history(x_user_id, payload.job_id, payload.history_data)
+    return {"status": "ok"}
+
+@app.get("/job-history")
+def get_user_job_history(x_user_id: Annotated[str | None, Header()] = "anonymous"):
+    return {"history_data": get_job_history(x_user_id)}

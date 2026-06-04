@@ -31,6 +31,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
 
 import { processDocument } from "@/lib/api";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import type { Job, JobFile, JobHistoryItem, ProcessingOptions } from "@/lib/types";
 import { base64ToBlob, cn, safeFolderName } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -117,19 +118,22 @@ export default function Home() {
   const [showApiCard, setShowApiCard] = useState(false);
   const [extractedHistory, setExtractedHistory] = useState<any[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isSignedIn, user } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef(false);
 
   useEffect(() => {
-    if (view === "results") {
-      fetch(`${process.env.NEXT_PUBLIC_PROCESSOR_API ?? "http://127.0.0.1:8000"}/history`)
+    if (view === "results" && user?.id) {
+      fetch(`${process.env.NEXT_PUBLIC_PROCESSOR_API ?? "http://127.0.0.1:8000"}/history`, {
+        headers: { "x-user-id": user.id }
+      })
         .then(res => res.json())
         .then(data => {
            setExtractedHistory(data.history || []);
         })
         .catch(err => console.error("Failed to load history", err));
     }
-  }, [view]);
+  }, [view, user?.id]);
 
   function applyTheme(next: "light" | "dark" | "system") {
     setTheme(next);
@@ -196,21 +200,54 @@ export default function Home() {
 
   useEffect(() => {
     try {
-      setHistory(JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]"));
       const saved = (localStorage.getItem("ai-doc-theme") ?? "light") as "light" | "dark" | "system";
       setTheme(saved);
       setApiKey(localStorage.getItem("ai-doc-gemini-key") ?? "");
-    } catch {
+    } catch {}
+
+    if (user?.id) {
+      fetch(`${process.env.NEXT_PUBLIC_PROCESSOR_API ?? "http://127.0.0.1:8000"}/job-history`, {
+        headers: { "x-user-id": user.id }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.history_data) {
+          setHistory(data.history_data);
+        }
+      })
+      .catch(() => setHistory([]));
+    } else {
       setHistory([]);
     }
-  }, []);
+  }, [user?.id]);
 
   function saveHistory(nextHistory: JobHistoryItem[]) {
     setHistory(nextHistory);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(nextHistory));
+    if (user?.id) {
+      fetch(`${process.env.NEXT_PUBLIC_PROCESSOR_API ?? "http://127.0.0.1:8000"}/job-history`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": user.id
+        },
+        body: JSON.stringify({
+          job_id: job.id || "default",
+          history_data: nextHistory
+        })
+      }).catch(console.error);
+    }
   }
 
   function onFilesSelected(files: FileList | null) {
+    if (!isSignedIn) {
+      Swal.fire({
+        icon: "warning",
+        title: "Authentication Required",
+        text: "Please sign in to process documents.",
+        confirmButtonColor: "#3b82f6"
+      });
+      return;
+    }
     if (!files) return;
     const accepted = Array.from(files).filter((file) => /\.(pdf|png|jpe?g)$/i.test(file.name));
     if (accepted.length > 0) {
@@ -225,6 +262,15 @@ export default function Home() {
   }
 
   async function chooseInputFolder() {
+    if (!isSignedIn) {
+      Swal.fire({
+        icon: "warning",
+        title: "Authentication Required",
+        text: "Please sign in to process documents.",
+        confirmButtonColor: "#3b82f6"
+      });
+      return;
+    }
     if (!window.showDirectoryPicker) {
       fileInputRef.current?.click();
       return;
@@ -339,7 +385,7 @@ export default function Home() {
         } else {
           setJob((old) => updateFile(old, target.id, { status }, `${target.file.name} -> ${status.toUpperCase()}`));
         }
-      }, apiKey || undefined)));
+      }, apiKey || undefined, user?.id)));
 
       results.forEach((result, i) => {
         const globalIndex = batchStart + i;
@@ -527,6 +573,20 @@ export default function Home() {
               </button>
             ))}
           </nav>
+          
+          <div className="absolute bottom-5 left-4 right-4 border-t pt-4">
+            {isSignedIn ? (
+              <div className="flex w-full items-center gap-3 rounded-md px-2 py-2">
+                <UserButton showName={true} />
+              </div>
+            ) : (
+              <SignInButton mode="modal">
+                <button className="flex w-full items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                  Sign In
+                </button>
+              </SignInButton>
+            )}
+          </div>
         </aside>
 
         <section className="w-full px-4 py-5 lg:ml-64 lg:px-8">

@@ -6,7 +6,8 @@ export async function processDocument(
   file: JobFile,
   options: ProcessingOptions,
   onProgress?: (status: JobFile["status"], data?: any) => void,
-  apiKey?: string
+  apiKey?: string,
+  userId?: string
 ) {
   const body = new FormData();
   body.append("file", file.file, file.file.name);
@@ -17,6 +18,7 @@ export async function processDocument(
 
   const headers: Record<string, string> = {};
   if (apiKey) headers["X-Gemini-Api-Key"] = apiKey;
+  if (userId) headers["x-user-id"] = userId;
 
   if (onProgress) onProgress("uploading");
 
