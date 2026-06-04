@@ -34,9 +34,10 @@ def init_db():
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+        conn.commit()
         # Safely try to add user_id to existing extracted_data table if it doesn't exist
         try:
-            c.execute("ALTER TABLE extracted_data ADD COLUMN user_id TEXT;")
+            c.execute("ALTER TABLE extracted_data ADD COLUMN IF NOT EXISTS user_id TEXT;")
         except:
             conn.rollback() # column might already exist
         conn.commit()
