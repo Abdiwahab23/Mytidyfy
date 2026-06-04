@@ -141,3 +141,21 @@ def admin_stats():
     from .database import get_admin_stats
     return get_admin_stats()
 
+
+from pydantic import BaseModel
+class AnalyticsEvent(BaseModel):
+    event_type: str
+    ip_address: str
+    country: str
+
+@app.post('/analytics')
+def track_analytics(event: AnalyticsEvent):
+    from .database import log_analytics_event
+    log_analytics_event(event.event_type, event.ip_address, event.country)
+    return {'status': 'ok'}
+
+@app.get('/analytics/stats')
+def analytics_stats():
+    from .database import get_analytics_stats
+    return get_analytics_stats()
+

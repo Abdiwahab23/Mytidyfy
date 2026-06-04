@@ -127,6 +127,7 @@ export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminStats, setAdminStats] = useState<any>(null);
+  const [trueAnalytics, setTrueAnalytics] = useState<any>({ page_views: 0, unique_ips: 0, button_clicks: 0, top_countries: [] });
   const { isSignedIn, user } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef(false);
@@ -148,7 +149,47 @@ export default function Home() {
         .then(data => setAdminStats(data))
         .catch(err => console.error("Failed to load admin stats", err));
     }
-  }, [view, user?.id]);
+    if (view === "analytics" && isAdmin) {
+      fetch(`${process.env.NEXT_PUBLIC_PROCESSOR_API ?? "http://127.0.0.1:8000"}/analytics/stats`)
+        .then(res => res.json())
+        .then(data => setTrueAnalytics(data))
+        .catch(err => console.error("Failed to load true analytics", err));
+    }
+  }, [view, user?.id, isAdmin]);
+
+  // Global Analytics Tracker
+  useEffect(() => {
+    let visitorData = { ip: "Unknown", country: "Unknown" };
+    
+    // Fetch IP and Country, then log page view
+    fetch("https://ipapi.co/json/")
+      .then(res => res.json())
+      .then(data => {
+        if (data.ip && data.country_name) {
+          visitorData = { ip: data.ip, country: data.country_name };
+        }
+        return fetch(`${process.env.NEXT_PUBLIC_PROCESSOR_API ?? "http://127.0.0.1:8000"}/analytics`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ event_type: "page_view", ip_address: visitorData.ip, country: visitorData.country })
+        });
+      })
+      .catch(() => console.log("Analytics blocked or failed."));
+
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest("button") || target.closest("a")) {
+        fetch(`${process.env.NEXT_PUBLIC_PROCESSOR_API ?? "http://127.0.0.1:8000"}/analytics`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ event_type: "button_click", ip_address: visitorData.ip, country: visitorData.country })
+        }).catch(() => {});
+      }
+    };
+    
+    document.addEventListener("click", handleGlobalClick);
+    return () => document.removeEventListener("click", handleGlobalClick);
+  }, []);
 
   function applyTheme(next: "light" | "dark" | "system") {
     setTheme(next);
@@ -1301,7 +1342,7 @@ export default function Home() {
                   <div className="mb-4 h-12 w-12 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-400">
                     <Eye className="h-6 w-6" />
                   </div>
-                  <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-foreground">10</h3>
+                  <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-foreground">{trueAnalytics.page_views || 0}</h3>
                   <p className="mt-1 text-sm font-medium text-slate-500 dark:text-muted-foreground">Page Views</p>
                 </div>
 
@@ -1309,7 +1350,7 @@ export default function Home() {
                   <div className="mb-4 h-12 w-12 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-400">
                     <Users className="h-6 w-6" />
                   </div>
-                  <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-foreground">8</h3>
+                  <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-foreground">{trueAnalytics.unique_ips || 0}</h3>
                   <p className="mt-1 text-sm font-medium text-slate-500 dark:text-muted-foreground">Unique Visitors</p>
                 </div>
 
@@ -1317,7 +1358,7 @@ export default function Home() {
                   <div className="mb-4 h-12 w-12 flex items-center justify-center rounded-xl bg-amber-50 text-amber-500 dark:bg-amber-900/30 dark:text-amber-400">
                     <MousePointerClick className="h-6 w-6" />
                   </div>
-                  <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-foreground">4</h3>
+                  <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-foreground">{trueAnalytics.button_clicks || 0}</h3>
                   <p className="mt-1 text-sm font-medium text-slate-500 dark:text-muted-foreground">Button Clicks</p>
                 </div>
 
@@ -1325,7 +1366,7 @@ export default function Home() {
                   <div className="mb-4 h-12 w-12 flex items-center justify-center rounded-xl bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400">
                     <Globe2 className="h-6 w-6" />
                   </div>
-                  <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-foreground">7</h3>
+                  <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-foreground">{trueAnalytics.unique_ips || 0}</h3>
                   <p className="mt-1 text-sm font-medium text-slate-500 dark:text-muted-foreground">Unique IPs</p>
                 </div>
               </div>
@@ -1367,36 +1408,28 @@ export default function Home() {
                       <Globe2 className="h-5 w-5 text-green-500" />
                       <h3 className="text-lg font-bold">Top Countries</h3>
                     </div>
-                    <span className="text-sm font-medium text-slate-500">2 countries</span>
+                    <span className="text-sm font-medium text-slate-500">{trueAnalytics.top_countries?.length || 0} countries</span>
                   </div>
                   
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-6 w-6 items-center justify-center rounded bg-blue-100 text-xs font-bold text-blue-600">1</div>
-                        <div className="flex items-center gap-2 font-medium">
-                          <Globe2 className="h-4 w-4 text-blue-500" />
-                          Malaysia
+                    {trueAnalytics.top_countries?.map((c: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className={cn("flex h-6 w-6 items-center justify-center rounded text-xs font-bold", i === 0 ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-600")}>{i + 1}</div>
+                          <div className="flex items-center gap-2 font-medium">
+                            <Globe2 className={cn("h-4 w-4", i === 0 ? "text-blue-500" : "text-emerald-500")} />
+                            {c.country}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold">{c.visitors}</div>
+                          <div className="text-[10px] uppercase tracking-wider text-slate-400">visitors</div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold">6</div>
-                        <div className="text-[10px] uppercase tracking-wider text-slate-400">visitors</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-6 w-6 items-center justify-center rounded bg-slate-100 text-xs font-bold text-slate-600">2</div>
-                        <div className="flex items-center gap-2 font-medium">
-                          <Globe2 className="h-4 w-4 text-emerald-500" />
-                          Somalia
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold">2</div>
-                        <div className="text-[10px] uppercase tracking-wider text-slate-400">visitors</div>
-                      </div>
-                    </div>
+                    ))}
+                    {(!trueAnalytics.top_countries || trueAnalytics.top_countries.length === 0) && (
+                      <p className="text-sm text-muted-foreground text-center py-4">No location data yet.</p>
+                    )}
                   </div>
                 </div>
               </div>

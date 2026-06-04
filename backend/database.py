@@ -202,3 +202,52 @@ def get_admin_stats():
         conn.close()
     return stats
 
+
+
+def log_analytics_event(event_type: str, ip_address: str, country: str):
+    if DATABASE_URL:
+        conn = psycopg2.connect(DATABASE_URL)
+        c = conn.cursor()
+        c.execute('''CREATE TABLE IF NOT EXISTS analytics (id SERIAL PRIMARY KEY, event_type TEXT, ip_address TEXT, country TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+        c.execute('INSERT INTO analytics (event_type, ip_address, country) VALUES (%s, %s, %s)', (event_type, ip_address, country))
+        conn.commit()
+        conn.close()
+    else:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('''CREATE TABLE IF NOT EXISTS analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, event_type TEXT, ip_address TEXT, country TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+        c.execute('INSERT INTO analytics (event_type, ip_address, country) VALUES (?, ?, ?)', (event_type, ip_address, country))
+        conn.commit()
+        conn.close()
+
+def get_analytics_stats():
+    stats = {'page_views': 0, 'unique_ips': 0, 'button_clicks': 0, 'top_countries': []}
+    try:
+        if DATABASE_URL:
+            conn = psycopg2.connect(DATABASE_URL)
+            c = conn.cursor()
+            c.execute("SELECT COUNT(*) FROM analytics WHERE event_type='page_view'")
+            stats['page_views'] = c.fetchone()[0]
+            c.execute("SELECT COUNT(DISTINCT ip_address) FROM analytics")
+            stats['unique_ips'] = c.fetchone()[0]
+            c.execute("SELECT COUNT(*) FROM analytics WHERE event_type='button_click'")
+            stats['button_clicks'] = c.fetchone()[0]
+            c.execute("SELECT country, COUNT(DISTINCT ip_address) as c FROM analytics WHERE country IS NOT NULL AND country != '' GROUP BY country ORDER BY c DESC LIMIT 5")
+            stats['top_countries'] = [{'country': r[0], 'visitors': r[1]} for r in c.fetchall()]
+            conn.close()
+        else:
+            conn = sqlite3.connect(DB_PATH)
+            c = conn.cursor()
+            c.execute("SELECT COUNT(*) FROM analytics WHERE event_type='page_view'")
+            stats['page_views'] = c.fetchone()[0]
+            c.execute("SELECT COUNT(DISTINCT ip_address) FROM analytics")
+            stats['unique_ips'] = c.fetchone()[0]
+            c.execute("SELECT COUNT(*) FROM analytics WHERE event_type='button_click'")
+            stats['button_clicks'] = c.fetchone()[0]
+            c.execute("SELECT country, COUNT(DISTINCT ip_address) as c FROM analytics WHERE country IS NOT NULL AND country != '' GROUP BY country ORDER BY c DESC LIMIT 5")
+            stats['top_countries'] = [{'country': r[0], 'visitors': r[1]} for r in c.fetchall()]
+            conn.close()
+    except Exception as e:
+        print('Analytics table might not exist yet:', e)
+    return stats
+
