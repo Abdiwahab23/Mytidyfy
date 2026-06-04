@@ -105,7 +105,7 @@ function formatExtractedDataToHTML(data: any): string {
 }
 
 export default function Home() {
-  const [view, setView] = useState<"dashboard" | "new" | "rename" | "extract" | "processing" | "results" | "history" | "settings" | "success">("dashboard");
+  const [view, setView] = useState<"dashboard" | "new" | "rename" | "extract" | "processing" | "results" | "history" | "settings" | "success" | "admin" | "admin-login">("dashboard");
   const [job, setJob] = useState<Job>(() => createJob([]));
   const [options, setOptions] = useState<ProcessingOptions>(defaultOptions);
   const [selectedResult, setSelectedResult] = useState(0);
@@ -213,6 +213,10 @@ export default function Home() {
       const saved = (localStorage.getItem("ai-doc-theme") ?? "light") as "light" | "dark" | "system";
       setTheme(saved);
       setApiKey(localStorage.getItem("ai-doc-gemini-key") ?? "");
+      const isAdminAuth = localStorage.getItem("adminAuth") === "true";
+      setIsAdmin(isAdminAuth);
+      if (isAdminAuth) setView("admin");
+    } catch {}
     } catch {}
 
     if (user?.id) {
@@ -540,7 +544,8 @@ export default function Home() {
         <aside className={cn(
           "fixed inset-y-0 left-0 z-50 w-64 transition-transform duration-300 lg:translate-x-0 lg:block",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full",
-          isAdmin ? "bg-white border-r-[4px] border-r-green-100 dark:border-r-green-900/20 dark:bg-card px-4 py-6 shadow-sm" : "border-r bg-card px-4 py-5"
+          isAdmin ? "bg-white border-r-[4px] border-r-green-100 dark:border-r-green-900/20 dark:bg-card px-4 py-6 shadow-sm" : "border-r bg-card px-4 py-5",
+          view === "admin-login" && "hidden lg:hidden"
         )}>
           {isAdmin ? (
             <div className="flex items-center justify-between px-2">
@@ -593,6 +598,7 @@ export default function Home() {
                 onClick={() => {
                   if (key === "settings" && isAdmin) {
                     setIsAdmin(false);
+                    localStorage.removeItem("adminAuth");
                     setView("dashboard");
                   } else if (!isAdmin || key === "admin") {
                     setView(key as typeof view);
@@ -633,38 +639,40 @@ export default function Home() {
           </div>
         </aside>
 
-        <section className="w-full px-4 py-5 lg:ml-64 lg:px-8">
-          <header className="mb-6 flex flex-col gap-4 border-b pb-5 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="icon" className="lg:hidden shrink-0" onClick={() => setIsMobileMenuOpen(true)}>
-                <Menu className="h-5 w-5" />
-              </Button>
-              <div>
-                <h1 className="text-2xl font-semibold tracking-normal">MyTidyfy</h1>
-                <p className="text-sm text-muted-foreground hidden sm:block">Your AI-Powered Document Organizer</p>
-                <p className="mt-1 text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">Organize, rename, extract it</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {isAdmin && (
-                <Button variant="destructive" onClick={() => setView("admin")}>
-                  <Shield className="h-4 w-4 mr-2" />
-                  Admin
+        <section className={cn("w-full transition-all", view === "admin-login" ? "h-screen bg-slate-50 dark:bg-slate-950 flex flex-col" : "px-4 py-5 lg:ml-64 lg:px-8")}>
+          {view !== "admin-login" && (
+            <header className="mb-6 flex flex-col gap-4 border-b pb-5 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-3">
+                <Button variant="outline" size="icon" className="lg:hidden shrink-0" onClick={() => setIsMobileMenuOpen(true)}>
+                  <Menu className="h-5 w-5" />
                 </Button>
-              )}
-              <Button variant="outline" onClick={() => setView("history")}>
-                <Archive className="h-4 w-4" />
-                History
-              </Button>
-              <Button onClick={() => {
-                setView("new");
-                setOptions({ ...options, rename: false });
-              }}>
-                <UploadCloud className="h-4 w-4" />
-                New Activity
-              </Button>
-            </div>
-          </header>
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-normal">MyTidyfy</h1>
+                  <p className="text-sm text-muted-foreground hidden sm:block">Your AI-Powered Document Organizer</p>
+                  <p className="mt-1 text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">Organize, rename, extract it</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {isAdmin && (
+                  <Button variant="destructive" onClick={() => setView("admin")}>
+                    <Shield className="h-4 w-4 mr-2" />
+                    Admin
+                  </Button>
+                )}
+                <Button variant="outline" onClick={() => setView("history")}>
+                  <Archive className="h-4 w-4" />
+                  History
+                </Button>
+                <Button onClick={() => {
+                  setView("new");
+                  setOptions({ ...options, rename: false });
+                }}>
+                  <UploadCloud className="h-4 w-4" />
+                  New Activity
+                </Button>
+              </div>
+            </header>
+          )}
 
           {view === "dashboard" && (
             <div className="space-y-6">
@@ -1088,11 +1096,64 @@ export default function Home() {
             </Card>
           )}
 
+          {view === "admin-login" && (
+            <div className="flex flex-1 items-center justify-center p-4">
+              <Card className="w-full max-w-md shadow-2xl border-0">
+                <CardHeader className="space-y-3 text-center pb-8">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0f172a] shadow-inner mb-2">
+                    <Shield className="h-8 w-8 text-green-400" />
+                  </div>
+                  <CardTitle className="text-3xl font-bold tracking-tight">Admin Portal</CardTitle>
+                  <CardDescription className="text-base">Enter your credentials to access system settings.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const form = e.target as HTMLFormElement;
+                      const user = (form.elements.namedItem("user") as HTMLInputElement).value;
+                      const pass = (form.elements.namedItem("pass") as HTMLInputElement).value;
+                      if (user === "abdi" && pass === "123") {
+                        localStorage.setItem("adminAuth", "true");
+                        setIsAdmin(true);
+                        setView("admin");
+                      } else {
+                        Swal.fire("Error", "Invalid credentials", "error");
+                      }
+                    }}
+                    className="space-y-6"
+                  >
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Username</label>
+                      <Input name="user" placeholder="admin" className="h-12 px-4" autoFocus required />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Password</label>
+                      <Input name="pass" type="password" placeholder="••••••••" className="h-12 px-4" required />
+                    </div>
+                    <div className="pt-2 flex flex-col gap-3">
+                      <Button type="submit" size="lg" className="w-full h-12 text-base font-semibold bg-[#0f172a] text-white hover:bg-slate-800">
+                        Sign In to Admin
+                      </Button>
+                      <Button type="button" variant="ghost" onClick={() => setView("settings")} className="w-full">
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {view === "admin" && isAdmin && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-semibold tracking-tight">System Administration</h2>
-                <Button variant="outline" onClick={() => { setIsAdmin(false); setView("dashboard"); }}>Exit Admin Mode</Button>
+                <Button variant="outline" onClick={() => { 
+                  setIsAdmin(false); 
+                  localStorage.removeItem("adminAuth");
+                  setView("dashboard"); 
+                }}>Exit Admin Mode</Button>
               </div>
               
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -1333,26 +1394,7 @@ export default function Home() {
                   <CardDescription>Access the full system admin panel.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button variant="destructive" onClick={async () => {
-                    const { value: formValues } = await Swal.fire({
-                      title: "Admin Login",
-                      html:
-                        '<input id="swal-input1" class="swal2-input" placeholder="Username">' +
-                        '<input id="swal-input2" class="swal2-input" type="password" placeholder="Password">',
-                      focusConfirm: false,
-                      preConfirm: () => {
-                        const user = (document.getElementById("swal-input1") as HTMLInputElement).value;
-                        const pass = (document.getElementById("swal-input2") as HTMLInputElement).value;
-                        if (user === "abdi" && pass === "123") return true;
-                        Swal.showValidationMessage("Invalid credentials");
-                        return false;
-                      }
-                    });
-                    if (formValues) {
-                      setIsAdmin(true);
-                      setView("admin" as any);
-                    }
-                  }}>
+                  <Button variant="destructive" onClick={() => setView("admin-login")}>
                     <Shield className="mr-2 h-4 w-4" />
                     Enter Admin Mode
                   </Button>
