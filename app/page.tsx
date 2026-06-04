@@ -1236,8 +1236,8 @@ export default function Home() {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardDescription>Top Category</CardDescription>
-                    <CardTitle className="text-4xl truncate" title={adminStats?.top_category || "None"}>
-                      {adminStats?.top_category ? adminStats.top_category.substring(0, 5) + "..." : "N/A"}
+                    <CardTitle className="text-4xl truncate" title={adminStats?.top_categories?.[0]?.category || "None"}>
+                      {adminStats?.top_categories?.[0]?.category ? adminStats.top_categories[0].category.substring(0, 7) + (adminStats.top_categories[0].category.length > 7 ? "..." : "") : "N/A"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
