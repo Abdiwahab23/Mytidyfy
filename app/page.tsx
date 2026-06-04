@@ -24,7 +24,8 @@ import {
   Sun,
   Trash2,
   UploadCloud,
-  XCircle
+  XCircle,
+  Menu
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
@@ -115,6 +116,7 @@ export default function Home() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [showApiCard, setShowApiCard] = useState(false);
   const [extractedHistory, setExtractedHistory] = useState<any[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef(false);
 
@@ -471,13 +473,29 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       <div className="flex">
-        <aside className="fixed inset-y-0 left-0 hidden w-64 border-r bg-card px-4 py-5 lg:block">
-          <div className="flex items-center gap-3 px-2">
-            <img src="/logo.png" alt="MyTidyfy" className="h-10 w-10 rounded-lg object-contain" />
-            <div>
-              <p className="text-sm font-semibold">MyTidyfy</p>
-              <p className="text-xs text-muted-foreground">Document Organizer</p>
+        {/* Mobile Overlay */}
+        {isMobileMenuOpen && (
+          <div 
+            className="fixed inset-0 z-40 bg-black/50 lg:hidden" 
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
+
+        <aside className={cn(
+          "fixed inset-y-0 left-0 z-50 w-64 border-r bg-card px-4 py-5 transition-transform duration-300 lg:translate-x-0 lg:block",
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        )}>
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="MyTidyfy" className="h-10 w-10 rounded-lg object-contain" />
+              <div>
+                <p className="text-sm font-semibold">MyTidyfy</p>
+                <p className="text-xs text-muted-foreground">Document Organizer</p>
+              </div>
             </div>
+            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+              <XCircle className="h-5 w-5" />
+            </Button>
           </div>
           <nav className="mt-8 space-y-1">
             {[
@@ -497,6 +515,7 @@ export default function Home() {
                   if (key === "new") setOptions({ ...options, rename: false, customPrompt: "" });
                   if (key === "rename") setOptions({ ...options, rename: true, customPrompt: "" });
                   if (key === "extract") setOptions({ ...options, rename: false, customPrompt: "" });
+                  setIsMobileMenuOpen(false);
                 }}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
@@ -512,12 +531,17 @@ export default function Home() {
 
         <section className="w-full px-4 py-5 lg:ml-64 lg:px-8">
           <header className="mb-6 flex flex-col gap-4 border-b pb-5 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-normal">MyTidyfy</h1>
-              <p className="text-sm text-muted-foreground">Your AI-Powered Document Organizer</p>
-              <p className="mt-1 text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">Organize, rename, extract it</p>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="icon" className="lg:hidden shrink-0" onClick={() => setIsMobileMenuOpen(true)}>
+                <Menu className="h-5 w-5" />
+              </Button>
+              <div>
+                <h1 className="text-2xl font-semibold tracking-normal">MyTidyfy</h1>
+                <p className="text-sm text-muted-foreground hidden sm:block">Your AI-Powered Document Organizer</p>
+                <p className="mt-1 text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">Organize, rename, extract it</p>
+              </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={() => setView("history")}>
                 <Archive className="h-4 w-4" />
                 History
