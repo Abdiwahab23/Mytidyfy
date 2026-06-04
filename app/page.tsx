@@ -217,7 +217,6 @@ export default function Home() {
       setIsAdmin(isAdminAuth);
       if (isAdminAuth) setView("admin");
     } catch {}
-    } catch {}
 
     if (user?.id) {
       fetch(`${process.env.NEXT_PUBLIC_PROCESSOR_API ?? "http://127.0.0.1:8000"}/job-history`, {
