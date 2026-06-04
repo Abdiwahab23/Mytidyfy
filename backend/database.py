@@ -220,31 +220,48 @@ def log_analytics_event(event_type: str, ip_address: str, country: str):
         conn.commit()
         conn.close()
 
-def get_analytics_stats():
+def get_analytics_stats(timeframe: str = 'today'):
+    import datetime
     stats = {'page_views': 0, 'unique_ips': 0, 'button_clicks': 0, 'top_countries': []}
     try:
+        now = datetime.datetime.utcnow()
+        if timeframe == 'today':
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif timeframe == 'yesterday':
+            start_date = (now - datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+            now = start_date + datetime.timedelta(days=1)
+        elif timeframe == '7days':
+            start_date = now - datetime.timedelta(days=7)
+        elif timeframe == '30days':
+            start_date = now - datetime.timedelta(days=30)
+        else:
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        start_str = start_date.strftime('%Y-%m-%d %H:%M:%S')
+        end_str = now.strftime('%Y-%m-%d %H:%M:%S')
+
         if DATABASE_URL:
             conn = psycopg2.connect(DATABASE_URL)
             c = conn.cursor()
-            c.execute("SELECT COUNT(*) FROM analytics WHERE event_type='page_view'")
+            c.execute("SELECT COUNT(*) FROM analytics WHERE event_type='page_view' AND created_at >= %s AND created_at < %s", (start_str, end_str))
             stats['page_views'] = c.fetchone()[0]
-            c.execute("SELECT COUNT(DISTINCT ip_address) FROM analytics")
+            c.execute("SELECT COUNT(DISTINCT ip_address) FROM analytics WHERE created_at >= %s AND created_at < %s", (start_str, end_str))
             stats['unique_ips'] = c.fetchone()[0]
-            c.execute("SELECT COUNT(*) FROM analytics WHERE event_type='button_click'")
+            c.execute("SELECT COUNT(*) FROM analytics WHERE event_type='button_click' AND created_at >= %s AND created_at < %s", (start_str, end_str))
             stats['button_clicks'] = c.fetchone()[0]
-            c.execute("SELECT country, COUNT(DISTINCT ip_address) as c FROM analytics WHERE country IS NOT NULL AND country != '' GROUP BY country ORDER BY c DESC LIMIT 5")
+            c.execute("SELECT country, COUNT(DISTINCT ip_address) as c FROM analytics WHERE country IS NOT NULL AND country != '' AND created_at >= %s AND created_at < %s GROUP BY country ORDER BY c DESC LIMIT 5", (start_str, end_str))
             stats['top_countries'] = [{'country': r[0], 'visitors': r[1]} for r in c.fetchall()]
             conn.close()
         else:
             conn = sqlite3.connect(DB_PATH)
             c = conn.cursor()
-            c.execute("SELECT COUNT(*) FROM analytics WHERE event_type='page_view'")
+            c.execute("SELECT COUNT(*) FROM analytics WHERE event_type='page_view' AND created_at >= ? AND created_at < ?", (start_str, end_str))
             stats['page_views'] = c.fetchone()[0]
-            c.execute("SELECT COUNT(DISTINCT ip_address) FROM analytics")
+            c.execute("SELECT COUNT(DISTINCT ip_address) FROM analytics WHERE created_at >= ? AND created_at < ?", (start_str, end_str))
             stats['unique_ips'] = c.fetchone()[0]
-            c.execute("SELECT COUNT(*) FROM analytics WHERE event_type='button_click'")
+            c.execute("SELECT COUNT(*) FROM analytics WHERE event_type='button_click' AND created_at >= ? AND created_at < ?", (start_str, end_str))
             stats['button_clicks'] = c.fetchone()[0]
-            c.execute("SELECT country, COUNT(DISTINCT ip_address) as c FROM analytics WHERE country IS NOT NULL AND country != '' GROUP BY country ORDER BY c DESC LIMIT 5")
+            c.execute("SELECT country, COUNT(DISTINCT ip_address) as c FROM analytics WHERE country IS NOT NULL AND country != '' AND created_at >= ? AND created_at < ? GROUP BY country ORDER BY c DESC LIMIT 5", (start_str, end_str))
             stats['top_countries'] = [{'country': r[0], 'visitors': r[1]} for r in c.fetchall()]
             conn.close()
     except Exception as e:

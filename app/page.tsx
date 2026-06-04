@@ -128,6 +128,7 @@ export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminStats, setAdminStats] = useState<any>(null);
   const [trueAnalytics, setTrueAnalytics] = useState<any>({ page_views: 0, unique_ips: 0, button_clicks: 0, top_countries: [] });
+  const [analyticsTimeframe, setAnalyticsTimeframe] = useState<"today" | "yesterday" | "7days" | "30days">("today");
   const { isSignedIn, user } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef(false);
@@ -150,12 +151,12 @@ export default function Home() {
         .catch(err => console.error("Failed to load admin stats", err));
     }
     if (view === "analytics" && isAdmin) {
-      fetch(`${process.env.NEXT_PUBLIC_PROCESSOR_API ?? "http://127.0.0.1:8000"}/analytics/stats`)
+      fetch(`${process.env.NEXT_PUBLIC_PROCESSOR_API ?? "http://127.0.0.1:8000"}/analytics/stats_v2?timeframe=${analyticsTimeframe}`)
         .then(res => res.json())
         .then(data => setTrueAnalytics(data))
         .catch(err => console.error("Failed to load true analytics", err));
     }
-  }, [view, user?.id, isAdmin]);
+  }, [view, user?.id, isAdmin, analyticsTimeframe]);
 
   // Global Analytics Tracker
   useEffect(() => {
@@ -1315,10 +1316,10 @@ export default function Home() {
 
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-2 rounded-full border bg-white p-1 shadow-sm dark:bg-slate-900 dark:border-slate-800">
-                  <button className="rounded-full bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white">Today</button>
-                  <button className="rounded-full px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Yesterday</button>
-                  <button className="rounded-full px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">7 Days</button>
-                  <button className="rounded-full px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">30 Days</button>
+                  <button onClick={() => setAnalyticsTimeframe("today")} className={cn("rounded-full px-4 py-1.5 text-sm font-semibold transition-colors", analyticsTimeframe === "today" ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800")}>Today</button>
+                  <button onClick={() => setAnalyticsTimeframe("yesterday")} className={cn("rounded-full px-4 py-1.5 text-sm font-semibold transition-colors", analyticsTimeframe === "yesterday" ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800")}>Yesterday</button>
+                  <button onClick={() => setAnalyticsTimeframe("7days")} className={cn("rounded-full px-4 py-1.5 text-sm font-semibold transition-colors", analyticsTimeframe === "7days" ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800")}>7 Days</button>
+                  <button onClick={() => setAnalyticsTimeframe("30days")} className={cn("rounded-full px-4 py-1.5 text-sm font-semibold transition-colors", analyticsTimeframe === "30days" ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800")}>30 Days</button>
                 </div>
                 
                 <div className="flex items-center gap-3">
@@ -1378,7 +1379,7 @@ export default function Home() {
                       <Activity className="h-5 w-5 text-blue-500" />
                       <h3 className="text-lg font-bold">Traffic Overview</h3>
                     </div>
-                    <span className="rounded-md bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">Today</span>
+                    <span className="rounded-md bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300 capitalize">{analyticsTimeframe.replace('days', ' Days')}</span>
                   </div>
                   
                   {/* Mock Chart Area */}

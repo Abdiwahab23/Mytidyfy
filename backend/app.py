@@ -159,3 +159,9 @@ def analytics_stats():
     from .database import get_analytics_stats
     return get_analytics_stats()
 
+
+@app.get('/analytics/stats_v2')
+def analytics_stats_v2(timeframe: str = 'today'):
+    from .database import get_analytics_stats
+    return get_analytics_stats(timeframe)
+
