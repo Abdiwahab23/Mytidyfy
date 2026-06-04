@@ -5,7 +5,7 @@ const API_BASE = process.env.NEXT_PUBLIC_PROCESSOR_API ?? "http://127.0.0.1:8000
 export async function processDocument(
   file: JobFile,
   options: ProcessingOptions,
-  onProgress?: (status: JobFile["status"], data?: any) => void,
+  onProgress?: (status: JobFile["status"] | "warn", data?: any) => void,
   apiKey?: string,
   userId?: string
 ) {

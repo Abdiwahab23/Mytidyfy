@@ -23,7 +23,7 @@ export type JobFile = {
 export type Job = {
   id: string;
   createdAt: string;
-  status: "draft" | "processing" | "completed" | "failed";
+  status: "draft" | "processing" | "completed" | "failed" | "stopped";
   files: JobFile[];
   logs: string[];
   progress: number;
@@ -32,7 +32,7 @@ export type Job = {
 export type JobHistoryItem = {
   id: string;
   createdAt: string;
-  status: "completed" | "failed";
+  status: "completed" | "failed" | "stopped";
   totalFiles: number;
   processedFiles: number;
   failedFiles: number;

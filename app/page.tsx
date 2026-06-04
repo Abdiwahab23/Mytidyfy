@@ -56,7 +56,7 @@ type NativeDirectoryHandle = {
 
 declare global {
   interface Window {
-    showDirectoryPicker?: () => Promise<NativeDirectoryHandle>;
+    showDirectoryPicker?: (options?: any) => Promise<NativeDirectoryHandle>;
   }
 }
 
@@ -112,7 +112,7 @@ function formatExtractedDataToHTML(data: any): string {
 }
 
 export default function Home() {
-  const [view, setView] = useState<"dashboard" | "new" | "rename" | "extract" | "processing" | "results" | "history" | "settings" | "success" | "admin" | "admin-login" | "analytics">("dashboard");
+  const [view, setView] = useState<"dashboard" | "new" | "rename" | "extract" | "processing" | "results" | "history" | "settings" | "success" | "admin" | "admin-login" | "analytics" | "users" | "admin-profile">("dashboard");
   const [job, setJob] = useState<Job>(() => createJob([]));
   const [options, setOptions] = useState<ProcessingOptions>(defaultOptions);
   const [selectedResult, setSelectedResult] = useState(0);
@@ -358,7 +358,6 @@ export default function Home() {
       setInputName(handle.name);
       const files: File[] = [];
       async function readDir(dir: NativeDirectoryHandle, prefix = "") {
-        // @ts-expect-error: entries() is part of FileSystemDirectoryHandle
         for await (const [name, entry] of (dir as any).entries()) {
           if (entry.kind === "file") {
             if (/\.(pdf|png|jpe?g)$/i.test(name)) {
@@ -452,7 +451,7 @@ export default function Home() {
         if (status === "warn" && data?.message) {
           setJob((old) => ({ ...old, logs: [...old.logs, `⚠️ WARNING: ${data.message}`] }));
         } else {
-          setJob((old) => updateFile(old, target.id, { status }, `${target.file.name} -> ${status.toUpperCase()}`));
+          setJob((old) => updateFile(old, target.id, { status: status as JobFile["status"] }, `${target.file.name} -> ${status.toUpperCase()}`));
         }
       }, apiKey || undefined, user?.id)));
 
