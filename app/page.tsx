@@ -1609,11 +1609,11 @@ export default function Home() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>New Admin Username</Label>
+                    <label className="text-sm font-medium">New Admin Username</label>
                     <Input id="new-admin-user" placeholder="e.g. newadmin" />
                   </div>
                   <div className="space-y-2">
-                    <Label>New Admin Password</Label>
+                    <label className="text-sm font-medium">New Admin Password</label>
                     <Input id="new-admin-pass" type="password" placeholder="Enter new password" />
                   </div>
                   <Button 
