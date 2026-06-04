@@ -27,7 +27,12 @@ import {
   XCircle,
   Menu,
   Shield,
-  Users
+  Users,
+  Activity,
+  MousePointerClick,
+  Globe2,
+  Filter,
+  Calendar
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
@@ -105,7 +110,7 @@ function formatExtractedDataToHTML(data: any): string {
 }
 
 export default function Home() {
-  const [view, setView] = useState<"dashboard" | "new" | "rename" | "extract" | "processing" | "results" | "history" | "settings" | "success" | "admin" | "admin-login">("dashboard");
+  const [view, setView] = useState<"dashboard" | "new" | "rename" | "extract" | "processing" | "results" | "history" | "settings" | "success" | "admin" | "admin-login" | "analytics">("dashboard");
   const [job, setJob] = useState<Job>(() => createJob([]));
   const [options, setOptions] = useState<ProcessingOptions>(defaultOptions);
   const [selectedResult, setSelectedResult] = useState(0);
@@ -580,7 +585,7 @@ export default function Home() {
             {(isAdmin ? [
               ["admin", LayoutDashboard, "Dashboard"],
               ["users", Users, "Manage Users"],
-              ["analytics", FileJson, "Website Analytics"],
+              ["analytics", Activity, "Website Analytics"],
               ["settings", Settings, "Exit Admin"]
             ] : [
               ["dashboard", LayoutDashboard, "Dashboard"],
@@ -1244,6 +1249,156 @@ export default function Home() {
                     </Button>
                   </CardContent>
                 </Card>
+              </div>
+            </div>
+          )}
+
+          {view === "analytics" && isAdmin && (
+            <div className="space-y-8 pb-10">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-7 w-7 text-blue-600" />
+                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Website Analytics</h2>
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 text-sm font-medium text-slate-500">
+                    <div className="h-2 w-2 rounded-full bg-emerald-400"></div>
+                    Tracking visitors on mytidyfy.com • Today
+                  </div>
+                </div>
+                <Button variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Clear Analysis
+                </Button>
+              </div>
+
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center gap-2 rounded-full border bg-white p-1 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+                  <button className="rounded-full bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white">Today</button>
+                  <button className="rounded-full px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Yesterday</button>
+                  <button className="rounded-full px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">7 Days</button>
+                  <button className="rounded-full px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">30 Days</button>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+                    <span className="text-sm font-medium">06/04/2026</span>
+                    <Calendar className="h-4 w-4 text-slate-400" />
+                  </div>
+                  <div className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+                    <span className="text-sm font-medium">06/04/2026</span>
+                    <Calendar className="h-4 w-4 text-slate-400" />
+                  </div>
+                  <Button className="bg-blue-600 hover:bg-blue-700">
+                    <Filter className="mr-2 h-4 w-4" />
+                    Filter
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="flex flex-col justify-center rounded-2xl bg-white p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 dark:bg-card dark:border-border">
+                  <div className="mb-4 h-12 w-12 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-400">
+                    <Eye className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-foreground">10</h3>
+                  <p className="mt-1 text-sm font-medium text-slate-500 dark:text-muted-foreground">Page Views</p>
+                </div>
+
+                <div className="flex flex-col justify-center rounded-2xl bg-white p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 dark:bg-card dark:border-border">
+                  <div className="mb-4 h-12 w-12 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-400">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-foreground">8</h3>
+                  <p className="mt-1 text-sm font-medium text-slate-500 dark:text-muted-foreground">Unique Visitors</p>
+                </div>
+
+                <div className="flex flex-col justify-center rounded-2xl bg-white p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 dark:bg-card dark:border-border">
+                  <div className="mb-4 h-12 w-12 flex items-center justify-center rounded-xl bg-amber-50 text-amber-500 dark:bg-amber-900/30 dark:text-amber-400">
+                    <MousePointerClick className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-foreground">4</h3>
+                  <p className="mt-1 text-sm font-medium text-slate-500 dark:text-muted-foreground">Button Clicks</p>
+                </div>
+
+                <div className="flex flex-col justify-center rounded-2xl bg-white p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 dark:bg-card dark:border-border">
+                  <div className="mb-4 h-12 w-12 flex items-center justify-center rounded-xl bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400">
+                    <Globe2 className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-foreground">7</h3>
+                  <p className="mt-1 text-sm font-medium text-slate-500 dark:text-muted-foreground">Unique IPs</p>
+                </div>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-2 rounded-2xl bg-white p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 dark:bg-card dark:border-border">
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-5 w-5 text-blue-500" />
+                      <h3 className="text-lg font-bold">Traffic Overview</h3>
+                    </div>
+                    <span className="rounded-md bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">Today</span>
+                  </div>
+                  
+                  {/* Mock Chart Area */}
+                  <div className="relative h-64 w-full border-b border-l border-slate-200 dark:border-slate-800">
+                    {/* Y Axis labels */}
+                    <div className="absolute -left-6 bottom-0 top-0 flex flex-col justify-between text-xs text-slate-400">
+                      <span>7</span>
+                      <span>6</span>
+                      <span>5</span>
+                      <span>4</span>
+                      <span>3</span>
+                      <span>2</span>
+                      <span>1</span>
+                      <span>0</span>
+                    </div>
+                    {/* Mock Line (SVG) */}
+                    <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+                      <path d="M0,90 L20,85 L40,10 L60,80 L80,95 L100,90" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500" />
+                      <path d="M0,90 L20,85 L40,10 L60,80 L80,95 L100,90 L100,100 L0,100 Z" fill="currentColor" className="text-blue-500/10" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-white p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 dark:bg-card dark:border-border">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                      <Globe2 className="h-5 w-5 text-green-500" />
+                      <h3 className="text-lg font-bold">Top Countries</h3>
+                    </div>
+                    <span className="text-sm font-medium text-slate-500">2 countries</span>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-6 w-6 items-center justify-center rounded bg-blue-100 text-xs font-bold text-blue-600">1</div>
+                        <div className="flex items-center gap-2 font-medium">
+                          <Globe2 className="h-4 w-4 text-blue-500" />
+                          Malaysia
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold">6</div>
+                        <div className="text-[10px] uppercase tracking-wider text-slate-400">visitors</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-6 w-6 items-center justify-center rounded bg-slate-100 text-xs font-bold text-slate-600">2</div>
+                        <div className="flex items-center gap-2 font-medium">
+                          <Globe2 className="h-4 w-4 text-emerald-500" />
+                          Somalia
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold">2</div>
+                        <div className="text-[10px] uppercase tracking-wider text-slate-400">visitors</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
