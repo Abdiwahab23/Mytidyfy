@@ -159,7 +159,7 @@ export default function Home() {
         .then(data => setTrueAnalytics(data))
         .catch(err => console.error("Failed to load true analytics", err));
     }
-    if (view === "users" && isAdmin) {
+    if ((view === "users" || view === "admin") && isAdmin) {
       fetch(`${process.env.NEXT_PUBLIC_PROCESSOR_API ?? "http://127.0.0.1:8000"}/admin/users`)
         .then(res => res.json())
         .then(data => setAdminUsers(data.users || []))
@@ -1226,11 +1226,11 @@ export default function Home() {
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardDescription>Active Users</CardDescription>
-                    <CardTitle className="text-4xl">{adminStats?.active_users || 0}</CardTitle>
+                    <CardDescription>Registered Users</CardDescription>
+                    <CardTitle className="text-4xl">{adminUsers.length}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-xs text-muted-foreground bg-green-100 text-green-700 px-2 py-1 rounded-md inline-block font-semibold">HEALTH 98%</div>
+                    <div className="text-xs text-muted-foreground bg-green-100 text-green-700 px-2 py-1 rounded-md inline-block font-semibold">FROM CLERK</div>
                   </CardContent>
                 </Card>
                 <Card>
@@ -1265,12 +1265,19 @@ export default function Home() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {adminStats?.top_users?.map((u: any, i: number) => (
-                        <div key={i} className="flex items-center justify-between">
-                          <div className="font-mono text-xs">{u.user_id ? u.user_id.slice(0, 15) : "Anonymous"}...</div>
-                          <div className="font-bold">{u.count} docs</div>
-                        </div>
-                      ))}
+                      {adminStats?.top_users?.map((u: any, i: number) => {
+                        const userProfile = adminUsers.find((clerkUser: any) => clerkUser.id === u.user_id);
+                        const displayName = userProfile ? `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim() : (u.user_id && u.user_id !== "anonymous" ? u.user_id.slice(0, 15) + '...' : "Anonymous User");
+                        return (
+                          <div key={i} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {userProfile && <img src={userProfile.image_url} alt="avatar" className="h-5 w-5 rounded-full object-cover" />}
+                              <div className="font-medium text-sm">{displayName}</div>
+                            </div>
+                            <div className="font-bold text-sm text-slate-500">{u.count} docs</div>
+                          </div>
+                        );
+                      })}
                       {(!adminStats?.top_users || adminStats.top_users.length === 0) && (
                         <div className="text-sm text-muted-foreground">No processing history yet.</div>
                       )}
