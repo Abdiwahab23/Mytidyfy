@@ -45,6 +45,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 type NativeDirectoryHandle = {
   name: string;
@@ -1381,25 +1382,44 @@ export default function Home() {
                     </div>
                     <span className="rounded-md bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300 capitalize">{analyticsTimeframe.replace('days', ' Days')}</span>
                   </div>
-                  
-                  {/* Mock Chart Area */}
-                  <div className="relative h-64 w-full border-b border-l border-slate-200 dark:border-slate-800">
-                    {/* Y Axis labels */}
-                    <div className="absolute -left-6 bottom-0 top-0 flex flex-col justify-between text-xs text-slate-400">
-                      <span>7</span>
-                      <span>6</span>
-                      <span>5</span>
-                      <span>4</span>
-                      <span>3</span>
-                      <span>2</span>
-                      <span>1</span>
-                      <span>0</span>
-                    </div>
-                    {/* Mock Line (SVG) */}
-                    <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 100">
-                      <path d="M0,90 L20,85 L40,10 L60,80 L80,95 L100,90" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500" />
-                      <path d="M0,90 L20,85 L40,10 L60,80 L80,95 L100,90 L100,100 L0,100 Z" fill="currentColor" className="text-blue-500/10" />
-                    </svg>
+                  {/* Chart Area */}
+                  <div className="relative h-64 w-full">
+                    {(!trueAnalytics.chart_data || trueAnalytics.chart_data.length === 0) ? (
+                      <div className="flex h-full items-center justify-center text-slate-400 text-sm">
+                        No traffic data available for this timeframe.
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={trueAnalytics.chart_data} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <XAxis 
+                            dataKey="name" 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fill: '#94a3b8', fontSize: 12 }} 
+                            dy={10}
+                          />
+                          <Tooltip 
+                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
+                            labelStyle={{ fontWeight: 'bold', color: '#0f172a' }}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="views" 
+                            stroke="#3b82f6" 
+                            strokeWidth={4}
+                            fillOpacity={1} 
+                            fill="url(#colorViews)" 
+                            activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    )}
                   </div>
                 </div>
 
