@@ -538,23 +538,47 @@ export default function Home() {
         )}
 
         <aside className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r-[4px] border-r-green-100 dark:border-r-green-900/20 dark:bg-card px-4 py-6 transition-transform duration-300 lg:translate-x-0 lg:block shadow-sm",
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 left-0 z-50 w-64 transition-transform duration-300 lg:translate-x-0 lg:block",
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full",
+          isAdmin ? "bg-white border-r-[4px] border-r-green-100 dark:border-r-green-900/20 dark:bg-card px-4 py-6 shadow-sm" : "border-r bg-card px-4 py-5"
         )}>
-          <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-3 px-2">
-              <img src="/logo.png" alt="MyTidyfy" className="h-10 w-10 rounded-xl object-contain shadow-sm" />
-              <div>
-                <p className="text-lg font-bold text-slate-900 dark:text-foreground leading-tight">MyTidyfy</p>
-                <p className="text-xs text-slate-500 dark:text-muted-foreground">Document Organizer</p>
+          {isAdmin ? (
+            <div className="flex items-center justify-between px-2">
+              <div className="flex items-center gap-3 px-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0f172a] shadow-sm">
+                  <Shield className="h-5 w-5 text-green-400" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-slate-900 dark:text-foreground leading-tight">Admin Portal</p>
+                  <p className="text-xs text-slate-500 dark:text-muted-foreground">MyTidyfy System</p>
+                </div>
               </div>
+              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+                <XCircle className="h-5 w-5" />
+              </Button>
             </div>
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsMobileMenuOpen(false)}>
-              <XCircle className="h-5 w-5" />
-            </Button>
-          </div>
-          <nav className="mt-10 space-y-2">
-            {[
+          ) : (
+            <div className="flex items-center justify-between px-2">
+              <div className="flex items-center gap-3">
+                <img src="/logo.png" alt="MyTidyfy" className="h-10 w-10 rounded-lg object-contain" />
+                <div>
+                  <p className="text-sm font-semibold">MyTidyfy</p>
+                  <p className="text-xs text-muted-foreground">Document Organizer</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+                <XCircle className="h-5 w-5" />
+              </Button>
+            </div>
+          )}
+
+          <nav className={cn("space-y-1", isAdmin ? "mt-10 space-y-2" : "mt-8")}>
+            {(isAdmin ? [
+              ["admin", LayoutDashboard, "Dashboard"],
+              ["users", Users, "Manage Users"],
+              ["analytics", FileJson, "Website Analytics"],
+              ["settings", Settings, "Exit Admin"]
+            ] : [
               ["dashboard", LayoutDashboard, "Dashboard"],
               ["new", UploadCloud, "Classify PDFs"],
               ["rename", FileSignature, "Smart Rename"],
@@ -563,24 +587,32 @@ export default function Home() {
               ["results", FileJson, "Results"],
               ["history", History, "History"],
               ["settings", Settings, "Settings"]
-            ].map(([key, Icon, label]) => (
+            ]).map(([key, Icon, label]) => (
               <button
                 key={key as string}
                 onClick={() => {
-                  setView(key as typeof view);
-                  if (key === "new") setOptions({ ...options, rename: false, customPrompt: "" });
-                  if (key === "rename") setOptions({ ...options, rename: true, customPrompt: "" });
-                  if (key === "extract") setOptions({ ...options, rename: false, customPrompt: "" });
+                  if (key === "settings" && isAdmin) {
+                    setIsAdmin(false);
+                    setView("dashboard");
+                  } else if (!isAdmin || key === "admin") {
+                    setView(key as typeof view);
+                    if (key === "new") setOptions({ ...options, rename: false, customPrompt: "" });
+                    if (key === "rename") setOptions({ ...options, rename: true, customPrompt: "" });
+                    if (key === "extract") setOptions({ ...options, rename: false, customPrompt: "" });
+                  }
                   setIsMobileMenuOpen(false);
                 }}
-                className={cn(
+                className={isAdmin ? cn(
                   "flex w-full items-center gap-4 rounded-xl px-4 py-3 text-[15px] transition-all",
-                  view === key 
+                  view === key || (key === "admin" && view === "admin")
                     ? "bg-[#0f172a] text-white shadow-md font-semibold dark:bg-white dark:text-black" 
                     : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 font-medium dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/50"
+                ) : cn(
+                  "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
+                  view === key && "bg-accent text-accent-foreground"
                 )}
               >
-                <Icon className={cn("h-5 w-5", view === key ? "text-white dark:text-black" : "text-slate-400")} />
+                <Icon className={isAdmin ? cn("h-5 w-5", view === key || (key === "admin" && view === "admin") ? "text-white dark:text-black" : "text-slate-400") : "h-4 w-4"} />
                 {label as string}
               </button>
             ))}
