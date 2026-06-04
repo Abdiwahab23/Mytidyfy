@@ -39,7 +39,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
 
 import { processDocument } from "@/lib/api";
-import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import { SignInButton, UserButton, useUser, useClerk } from "@clerk/nextjs";
 import type { Job, JobFile, JobHistoryItem, ProcessingOptions } from "@/lib/types";
 import { base64ToBlob, cn, safeFolderName } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -133,6 +133,7 @@ export default function Home() {
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [analyticsTimeframe, setAnalyticsTimeframe] = useState<"today" | "yesterday" | "7days" | "30days">("today");
   const { isSignedIn, user } = useUser();
+  const { openSignIn } = useClerk();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef(false);
 
@@ -313,7 +314,22 @@ export default function Home() {
         icon: "warning",
         title: "Authentication Required",
         text: "Please sign in to process documents.",
-        confirmButtonColor: "#3b82f6"
+        showCancelButton: true,
+        confirmButtonText: "Sign In to Continue",
+        cancelButtonText: "Cancel",
+        buttonsStyling: false,
+        customClass: {
+          popup: "rounded-2xl border border-slate-100 shadow-2xl dark:bg-slate-900 dark:border-slate-800",
+          title: "text-xl font-bold text-slate-900 dark:text-white pt-4",
+          htmlContainer: "text-slate-600 dark:text-slate-400 font-medium pb-4",
+          actions: "flex gap-3",
+          confirmButton: "bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-all shadow-sm",
+          cancelButton: "bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 px-6 rounded-lg transition-all dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          openSignIn();
+        }
       });
       return;
     }
@@ -336,7 +352,22 @@ export default function Home() {
         icon: "warning",
         title: "Authentication Required",
         text: "Please sign in to process documents.",
-        confirmButtonColor: "#3b82f6"
+        showCancelButton: true,
+        confirmButtonText: "Sign In to Continue",
+        cancelButtonText: "Cancel",
+        buttonsStyling: false,
+        customClass: {
+          popup: "rounded-2xl border border-slate-100 shadow-2xl dark:bg-slate-900 dark:border-slate-800",
+          title: "text-xl font-bold text-slate-900 dark:text-white pt-4",
+          htmlContainer: "text-slate-600 dark:text-slate-400 font-medium pb-4",
+          actions: "flex gap-3",
+          confirmButton: "bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-all shadow-sm",
+          cancelButton: "bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 px-6 rounded-lg transition-all dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          openSignIn();
+        }
       });
       return;
     }
