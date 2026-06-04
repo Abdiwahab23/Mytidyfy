@@ -3,12 +3,13 @@ import json
 import sqlite3
 from pathlib import Path
 
-try:
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
     import psycopg2
-except ImportError:
+else:
     psycopg2 = None
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
 DB_PATH = Path(__file__).parent / "extractor.db"
 
 def init_db():
