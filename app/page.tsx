@@ -129,6 +129,7 @@ export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminStats, setAdminStats] = useState<any>(null);
   const [trueAnalytics, setTrueAnalytics] = useState<any>({ page_views: 0, unique_ips: 0, button_clicks: 0, top_countries: [] });
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [analyticsTimeframe, setAnalyticsTimeframe] = useState<"today" | "yesterday" | "7days" | "30days">("today");
   const { isSignedIn, user } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -156,6 +157,12 @@ export default function Home() {
         .then(res => res.json())
         .then(data => setTrueAnalytics(data))
         .catch(err => console.error("Failed to load true analytics", err));
+    }
+    if (view === "users" && isAdmin) {
+      fetch(`${process.env.NEXT_PUBLIC_PROCESSOR_API ?? "http://127.0.0.1:8000"}/admin/users`)
+        .then(res => res.json())
+        .then(data => setAdminUsers(data.users || []))
+        .catch(err => console.error("Failed to load admin users", err));
     }
   }, [view, user?.id, isAdmin, analyticsTimeframe]);
 
@@ -1242,57 +1249,152 @@ export default function Home() {
                     <div className="flex items-end justify-between">
                       <h3 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-foreground truncate pr-2 max-w-[150px]">{adminStats?.top_categories?.[0]?.category || "None"}</h3>
                       <span className="rounded-md bg-yellow-100 px-2.5 py-1 text-xs font-bold text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">TRENDING</span>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardDescription>Total Documents</CardDescription>
+                    <CardTitle className="text-4xl">{adminStats?.total_documents || 0}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs text-muted-foreground bg-blue-100 text-blue-700 px-2 py-1 rounded-md inline-block font-semibold">+ALL TIME</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardDescription>Active Users</CardDescription>
+                    <CardTitle className="text-4xl">{adminStats?.active_users || 0}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs text-muted-foreground bg-green-100 text-green-700 px-2 py-1 rounded-md inline-block font-semibold">HEALTH 98%</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardDescription>Top Category</CardDescription>
+                    <CardTitle className="text-4xl truncate" title={adminStats?.top_category || "None"}>
+                      {adminStats?.top_category ? adminStats.top_category.substring(0, 5) + "..." : "N/A"}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs text-muted-foreground bg-yellow-100 text-yellow-700 px-2 py-1 rounded-md inline-block font-semibold">TRENDING</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-[#0f172a] text-white border-0">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="h-5 w-5 text-indigo-400" />
                     </div>
-                  </div>
-                </div>
-
-                {/* System Status (Dark Card) */}
-                <div className="flex flex-col justify-between rounded-2xl bg-[#0f172a] p-6 shadow-lg border border-slate-800">
-                  <div className="mb-4 h-12 w-12 flex items-center justify-center rounded-xl bg-slate-800 text-slate-300">
-                    <Sparkles className="h-6 w-6" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-slate-400">System Performance</p>
-                    <div className="flex items-end justify-between">
-                      <h3 className="text-4xl font-bold tracking-tight text-white">100%</h3>
-                      <span className="rounded-md bg-slate-800 px-2.5 py-1 text-xs font-bold text-slate-300">LIFETIME SUM</span>
-                    </div>
-                  </div>
-                </div>
+                    <CardDescription className="text-slate-400">System Performance</CardDescription>
+                    <CardTitle className="text-4xl">100%</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs text-muted-foreground bg-slate-800 text-slate-300 px-2 py-1 rounded-md inline-block font-semibold uppercase tracking-wider">Lifetime Sum</div>
+                  </CardContent>
+                </Card>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-6 md:grid-cols-2">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Top Users (By Document Count)</CardTitle>
+                    <CardTitle className="text-lg">Top Users (By Document Count)</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       {adminStats?.top_users?.map((u: any, i: number) => (
                         <div key={i} className="flex items-center justify-between">
-                          <div className="font-mono text-xs">{(u.user_id || "Anonymous").slice(0, 15)}...</div>
+                          <div className="font-mono text-xs">{u.user_id ? u.user_id.slice(0, 15) : "Anonymous"}...</div>
                           <div className="font-bold">{u.count} docs</div>
                         </div>
                       ))}
+                      {(!adminStats?.top_users || adminStats.top_users.length === 0) && (
+                        <div className="text-sm text-muted-foreground">No processing history yet.</div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Admin Tools</CardTitle>
+                    <CardTitle className="text-lg">Admin Tools</CardTitle>
                     <CardDescription>Advanced management requires Clerk Dashboard integration.</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-2">
-                    <Button variant="outline" className="w-full" onClick={() => window.open("https://dashboard.clerk.com", "_blank")}>
+                  <CardContent className="space-y-3">
+                    <Button variant="outline" className="w-full justify-start" onClick={() => window.open('https://dashboard.clerk.com/', '_blank')}>
                       Manage Users (Block / Delete) in Clerk
                     </Button>
-                    <Button variant="outline" className="w-full" onClick={() => window.open("https://posthog.com", "_blank")}>
-                      View Visitor Analytics (PostHog)
+                    <Button variant="outline" className="w-full justify-start" onClick={() => setView("analytics")}>
+                      View Visitor Analytics (True Data)
                     </Button>
                   </CardContent>
                 </Card>
               </div>
+            </div>
+          )}
+
+          {view === "users" && isAdmin && (
+            <div className="space-y-6 pb-10">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-7 w-7 text-indigo-600" />
+                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Manage Users</h2>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    View all signed-in users registered in your Clerk authentication portal.
+                  </p>
+                </div>
+                <Button onClick={() => window.open('https://dashboard.clerk.com/', '_blank')} className="bg-indigo-600 hover:bg-indigo-700">
+                  Manage in Clerk Dashboard
+                </Button>
+              </div>
+
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="border-b bg-slate-50 dark:bg-slate-900/50">
+                      <tr>
+                        <th className="px-6 py-4 font-medium text-slate-500">User</th>
+                        <th className="px-6 py-4 font-medium text-slate-500">Email</th>
+                        <th className="px-6 py-4 font-medium text-slate-500">Created</th>
+                        <th className="px-6 py-4 font-medium text-slate-500">Last Sign In</th>
+                        <th className="px-6 py-4 text-right font-medium text-slate-500">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {adminUsers.map((u, i) => (
+                        <tr key={i} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <img src={u.image_url || `https://ui-avatars.com/api/?name=${u.first_name || 'U'}`} alt="Avatar" className="h-8 w-8 rounded-full bg-slate-100 object-cover" />
+                              <span className="font-semibold text-slate-900 dark:text-slate-100">{u.first_name} {u.last_name}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                            {u.email_addresses?.[0]?.email_address || "No Email"}
+                          </td>
+                          <td className="px-6 py-4 text-slate-500">
+                            {new Date(u.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 text-slate-500">
+                            {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString() : 'Never'}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <Button variant="ghost" size="sm" onClick={() => window.open(`https://dashboard.clerk.com/`, '_blank')}>
+                              View
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                      {adminUsers.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-10 text-center text-slate-500">
+                            No users found or loading users...
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
             </div>
           )}
 

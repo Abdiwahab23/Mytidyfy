@@ -165,3 +165,20 @@ def analytics_stats_v2(timeframe: str = 'today'):
     from .database import get_analytics_stats
     return get_analytics_stats(timeframe)
 
+
+@app.get('/admin/users')
+def admin_users():
+    import os
+    import requests
+    from dotenv import load_dotenv
+    load_dotenv()
+    clerk_key = os.getenv('CLERK_SECRET_KEY')
+    if not clerk_key:
+        return {'users': []}
+    try:
+        res = requests.get('https://api.clerk.com/v1/users', headers={'Authorization': f'Bearer {clerk_key}'})
+        data = res.json()
+        return {'users': data}
+    except Exception as e:
+        return {'error': str(e), 'users': []}
+
