@@ -604,7 +604,7 @@ export default function Home() {
                     setIsAdmin(false);
                     localStorage.removeItem("adminAuth");
                     setView("dashboard");
-                  } else if (!isAdmin || key === "admin") {
+                  } else {
                     setView(key as typeof view);
                     if (key === "new") setOptions({ ...options, rename: false, customPrompt: "" });
                     if (key === "rename") setOptions({ ...options, rename: true, customPrompt: "" });
