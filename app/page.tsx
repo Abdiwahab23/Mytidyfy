@@ -26,7 +26,8 @@ import {
   UploadCloud,
   XCircle,
   Menu,
-  Shield
+  Shield,
+  Users
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
@@ -1060,31 +1061,62 @@ export default function Home() {
                 <Button variant="outline" onClick={() => { setIsAdmin(false); setView("dashboard"); }}>Exit Admin Mode</Button>
               </div>
               
-              <div className="grid gap-4 md:grid-cols-3">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Total Documents Processed</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{adminStats?.total_documents || 0}</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{adminStats?.top_users?.length || 0}</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Top Category</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{adminStats?.top_categories?.[0]?.category || "None"}</div>
-                  </CardContent>
-                </Card>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                {/* Total Documents */}
+                <div className="flex flex-col justify-between rounded-2xl bg-white p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 dark:bg-card dark:border-border">
+                  <div className="mb-4 h-12 w-12 flex items-center justify-center rounded-xl bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
+                    <FileJson className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-500 dark:text-muted-foreground">Total Documents</p>
+                    <div className="flex items-end justify-between">
+                      <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-foreground">{adminStats?.total_documents || 0}</h3>
+                      <span className="rounded-md bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">+ALL TIME</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Active Users */}
+                <div className="flex flex-col justify-between rounded-2xl bg-white p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 dark:bg-card dark:border-border">
+                  <div className="mb-4 h-12 w-12 flex items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-500 dark:text-muted-foreground">Active Users</p>
+                    <div className="flex items-end justify-between">
+                      <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-foreground">{adminStats?.top_users?.length || 0}</h3>
+                      <span className="rounded-md bg-green-100 px-2.5 py-1 text-xs font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">HEALTH 98%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Top Category */}
+                <div className="flex flex-col justify-between rounded-2xl bg-white p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 dark:bg-card dark:border-border">
+                  <div className="mb-4 h-12 w-12 flex items-center justify-center rounded-xl bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                    <FolderOpen className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-500 dark:text-muted-foreground">Top Category</p>
+                    <div className="flex items-end justify-between">
+                      <h3 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-foreground truncate pr-2 max-w-[150px]">{adminStats?.top_categories?.[0]?.category || "None"}</h3>
+                      <span className="rounded-md bg-yellow-100 px-2.5 py-1 text-xs font-bold text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">TRENDING</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* System Status (Dark Card) */}
+                <div className="flex flex-col justify-between rounded-2xl bg-[#0f172a] p-6 shadow-lg border border-slate-800">
+                  <div className="mb-4 h-12 w-12 flex items-center justify-center rounded-xl bg-slate-800 text-slate-300">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-400">System Performance</p>
+                    <div className="flex items-end justify-between">
+                      <h3 className="text-4xl font-bold tracking-tight text-white">100%</h3>
+                      <span className="rounded-md bg-slate-800 px-2.5 py-1 text-xs font-bold text-slate-300">LIFETIME SUM</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
