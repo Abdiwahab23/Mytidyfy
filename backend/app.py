@@ -135,3 +135,9 @@ def save_user_job_history(
 @app.get("/job-history")
 def get_user_job_history(x_user_id: Annotated[str | None, Header()] = "anonymous"):
     return {"history_data": get_job_history(x_user_id)}
+
+@app.get('/admin/stats')
+def admin_stats():
+    from .database import get_admin_stats
+    return get_admin_stats()
+

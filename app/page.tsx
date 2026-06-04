@@ -25,7 +25,8 @@ import {
   Trash2,
   UploadCloud,
   XCircle,
-  Menu
+  Menu,
+  Shield
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
@@ -118,6 +119,8 @@ export default function Home() {
   const [showApiCard, setShowApiCard] = useState(false);
   const [extractedHistory, setExtractedHistory] = useState<any[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminStats, setAdminStats] = useState<any>(null);
   const { isSignedIn, user } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef(false);
@@ -132,6 +135,12 @@ export default function Home() {
            setExtractedHistory(data.history || []);
         })
         .catch(err => console.error("Failed to load history", err));
+    }
+    if (view === "admin") {
+      fetch(`${process.env.NEXT_PUBLIC_PROCESSOR_API ?? "http://127.0.0.1:8000"}/admin/stats`)
+        .then(res => res.json())
+        .then(data => setAdminStats(data))
+        .catch(err => console.error("Failed to load admin stats", err));
     }
   }, [view, user?.id]);
 
@@ -602,6 +611,12 @@ export default function Home() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
+              {isAdmin && (
+                <Button variant="destructive" onClick={() => setView("admin")}>
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin
+                </Button>
+              )}
               <Button variant="outline" onClick={() => setView("history")}>
                 <Archive className="h-4 w-4" />
                 History
@@ -1038,6 +1053,75 @@ export default function Home() {
             </Card>
           )}
 
+          {view === "admin" && isAdmin && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-semibold tracking-tight">System Administration</h2>
+                <Button variant="outline" onClick={() => { setIsAdmin(false); setView("dashboard"); }}>Exit Admin Mode</Button>
+              </div>
+              
+              <div className="grid gap-4 md:grid-cols-3">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Total Documents Processed</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{adminStats?.total_documents || 0}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{adminStats?.top_users?.length || 0}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Top Category</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{adminStats?.top_categories?.[0]?.category || "None"}</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Top Users (By Document Count)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {adminStats?.top_users?.map((u: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between">
+                          <div className="font-mono text-xs">{u.user_id.slice(0, 15)}...</div>
+                          <div className="font-bold">{u.count} docs</div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Admin Tools</CardTitle>
+                    <CardDescription>Advanced management requires Clerk Dashboard integration.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Button variant="outline" className="w-full" onClick={() => window.open("https://dashboard.clerk.com", "_blank")}>
+                      Manage Users (Block / Delete) in Clerk
+                    </Button>
+                    <Button variant="outline" className="w-full" onClick={() => window.open("https://posthog.com", "_blank")}>
+                      View Visitor Analytics (PostHog)
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+
           {view === "settings" && (
             <div className="space-y-6">
               {/* API Key */}
@@ -1172,6 +1256,39 @@ export default function Home() {
                   >
                     <Trash2 className="h-4 w-4" />
                     Clear History
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* System Admin */}
+              <Card className="border-destructive/50">
+                <CardHeader>
+                  <CardTitle className="text-destructive">System Administration</CardTitle>
+                  <CardDescription>Access the full system admin panel.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="destructive" onClick={async () => {
+                    const { value: formValues } = await Swal.fire({
+                      title: "Admin Login",
+                      html:
+                        '<input id="swal-input1" class="swal2-input" placeholder="Username">' +
+                        '<input id="swal-input2" class="swal2-input" type="password" placeholder="Password">',
+                      focusConfirm: false,
+                      preConfirm: () => {
+                        const user = (document.getElementById("swal-input1") as HTMLInputElement).value;
+                        const pass = (document.getElementById("swal-input2") as HTMLInputElement).value;
+                        if (user === "abdi" && pass === "123") return true;
+                        Swal.showValidationMessage("Invalid credentials");
+                        return false;
+                      }
+                    });
+                    if (formValues) {
+                      setIsAdmin(true);
+                      setView("admin" as any);
+                    }
+                  }}>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Enter Admin Mode
                   </Button>
                 </CardContent>
               </Card>
