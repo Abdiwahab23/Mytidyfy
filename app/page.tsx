@@ -1096,7 +1096,7 @@ export default function Home() {
                     <div className="space-y-4">
                       {adminStats?.top_users?.map((u: any, i: number) => (
                         <div key={i} className="flex items-center justify-between">
-                          <div className="font-mono text-xs">{u.user_id.slice(0, 15)}...</div>
+                          <div className="font-mono text-xs">{(u.user_id || "Anonymous").slice(0, 15)}...</div>
                           <div className="font-bold">{u.count} docs</div>
                         </div>
                       ))}
