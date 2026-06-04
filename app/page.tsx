@@ -32,7 +32,8 @@ import {
   MousePointerClick,
   Globe2,
   Filter,
-  Calendar
+  Calendar,
+  UserCircle
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
@@ -636,6 +637,7 @@ export default function Home() {
               ["admin", LayoutDashboard, "Dashboard"],
               ["users", Users, "Manage Users"],
               ["analytics", Activity, "Website Analytics"],
+              ["admin-profile", UserCircle, "Admin Profile"],
               ["settings", Settings, "Exit Admin"]
             ] : [
               ["dashboard", LayoutDashboard, "Dashboard"],
@@ -1167,7 +1169,9 @@ export default function Home() {
                       const form = e.target as HTMLFormElement;
                       const user = (form.elements.namedItem("user") as HTMLInputElement).value;
                       const pass = (form.elements.namedItem("pass") as HTMLInputElement).value;
-                      if (user === "abdi" && pass === "123") {
+                      const storedPass = localStorage.getItem("adminPass") || "123";
+                      const storedUser = localStorage.getItem("adminUser") || "abdi";
+                      if (user === storedUser && pass === storedPass) {
                         localStorage.setItem("adminAuth", "true");
                         setIsAdmin(true);
                         setView("admin");
@@ -1584,6 +1588,53 @@ export default function Home() {
                     </tbody>
                   </table>
                 </div>
+              </Card>
+            </div>
+          )}
+
+          {view === "admin-profile" && isAdmin && (
+            <div className="mx-auto max-w-2xl space-y-6 pb-10">
+              <div className="flex items-center gap-2">
+                <UserCircle className="h-7 w-7 text-indigo-600" />
+                <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Admin Profile</h2>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Manage your system administrator credentials.
+              </p>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Change Admin Credentials</CardTitle>
+                  <CardDescription>Update the username and password used to access this admin portal.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>New Admin Username</Label>
+                    <Input id="new-admin-user" placeholder="e.g. newadmin" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>New Admin Password</Label>
+                    <Input id="new-admin-pass" type="password" placeholder="Enter new password" />
+                  </div>
+                  <Button 
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 mt-2"
+                    onClick={() => {
+                      const user = (document.getElementById('new-admin-user') as HTMLInputElement).value;
+                      const pass = (document.getElementById('new-admin-pass') as HTMLInputElement).value;
+                      if (!user || !pass) {
+                        Swal.fire({ title: "Error", text: "Username and Password cannot be empty", icon: "error" });
+                        return;
+                      }
+                      localStorage.setItem('adminUser', user);
+                      localStorage.setItem('adminPass', pass);
+                      Swal.fire({ title: "Success", text: "Admin credentials updated! Next time you log in, use these credentials.", icon: "success" });
+                      (document.getElementById('new-admin-user') as HTMLInputElement).value = '';
+                      (document.getElementById('new-admin-pass') as HTMLInputElement).value = '';
+                    }}
+                  >
+                    Save Changes
+                  </Button>
+                </CardContent>
               </Card>
             </div>
           )}
