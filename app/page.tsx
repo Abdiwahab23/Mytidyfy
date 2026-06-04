@@ -1317,9 +1317,9 @@ export default function Home() {
                     <CardTitle className="text-lg">Admin Tools</CardTitle>
                     <CardDescription>Advanced management requires Clerk Dashboard integration.</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Button variant="outline" className="w-full justify-start" onClick={() => window.open('https://dashboard.clerk.com/', '_blank')}>
-                      Manage Users (Block / Delete) in Clerk
+                  <CardContent className="space-y-2">
+                    <Button variant="outline" className="w-full justify-start" onClick={() => setView("users")}>
+                      Manage Users in System
                     </Button>
                     <Button variant="outline" className="w-full justify-start" onClick={() => setView("analytics")}>
                       View Visitor Analytics (True Data)
@@ -1556,6 +1556,73 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+          {view === "users" && isAdmin && (
+            <div className="space-y-6 pb-10">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-7 w-7 text-indigo-600" />
+                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Manage Users</h2>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    View all signed-in users registered in your Clerk authentication portal.
+                  </p>
+                </div>
+                <Button onClick={() => window.open('https://dashboard.clerk.com/', '_blank')} className="bg-indigo-600 hover:bg-indigo-700">
+                  Manage in Clerk Dashboard
+                </Button>
+              </div>
+
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="border-b bg-slate-50 dark:bg-slate-900/50">
+                      <tr>
+                        <th className="px-6 py-4 font-medium text-slate-500">User</th>
+                        <th className="px-6 py-4 font-medium text-slate-500">Email</th>
+                        <th className="px-6 py-4 font-medium text-slate-500">Created</th>
+                        <th className="px-6 py-4 font-medium text-slate-500">Last Sign In</th>
+                        <th className="px-6 py-4 text-right font-medium text-slate-500">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {adminUsers.map((u, i) => (
+                        <tr key={i} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <img src={u.image_url || `https://ui-avatars.com/api/?name=${u.first_name || 'U'}`} alt="Avatar" className="h-8 w-8 rounded-full bg-slate-100 object-cover" />
+                              <span className="font-semibold text-slate-900 dark:text-slate-100">{u.first_name} {u.last_name}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                            {u.email_addresses?.[0]?.email_address || "No Email"}
+                          </td>
+                          <td className="px-6 py-4 text-slate-500">
+                            {new Date(u.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 text-slate-500">
+                            {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString() : 'Never'}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <Button variant="ghost" size="sm" onClick={() => window.open(`https://dashboard.clerk.com/`, '_blank')}>
+                              View
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                      {adminUsers.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-10 text-center text-slate-500">
+                            No users found or loading users...
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
             </div>
           )}
 
